@@ -3,6 +3,7 @@ package emp.assignment;
 import java.util.*;
 import java.util.regex.*;
 
+
 abstract class Employee {
     private int empid;
     private String name;
@@ -114,7 +115,6 @@ class Manager extends Employee {
     }
 }
 
-
 class PatternMatching {
     public static String NameCheck() {
         String s1 = null;
@@ -217,14 +217,12 @@ final class CEO extends Employee {
     
     private static boolean flagemployee=false;
 
-    private CEO() 
-	{
-        
-		super(500000,"CEO");
+    private CEO() {
+        super(500000, "CEO");
         flagemployee=true;
-    
-	}
-    public static boolean getflagCEO() {return flagemployee;}
+    }
+
+    public static boolean getflagCEO() { return flagemployee; }
 
     public static CEO getobj() {
         if (obj == null) {
@@ -233,29 +231,39 @@ final class CEO extends Employee {
         return obj;
     }
 
-	  public void raisesalary() {
+    public void raisesalary() {
         float newval = this.getsalary();
         setsalary(newval + 50000);
     }
 }
 
+class NonExistException extends Exception {
+    public NonExistException() {
+        super();
+    }
+    public NonExistException(String msg) {
+        super(msg);
+    }
+}
 
-class EmployeeFactory {
-    public static Employee createEmployee(int choice) {
+
+interface EmployeeFactory {
+    Employee createEmployee(int choice) throws NonExistException;
+}
+
+
+class CreateEmployee implements EmployeeFactory {
+
+    public Employee createEmployee(int choice) throws NonExistException {
         if (choice != 1 && !CEO.getflagCEO()) {
-            System.out.println("CEO must be created first!");
-            return null; 
+            throw new NonExistException("CEO must be created first!");
         }
 
         switch (choice) {
             case 1: return CEO.getobj();
-                
             case 2: return new Clerk();
-                
             case 3: return new Programmer();
-                 
             case 4: return new Manager();
-                 
             default:
                 throw new RuntimeException("Invalid choice");
         }
@@ -263,22 +271,41 @@ class EmployeeFactory {
 }
 
 
-class NonExistException extends Exception
-{
-    public NonExistException()
-    {
-        super();
+interface Iterator {
+    boolean hasNext();
+    Employee next();
+}
+
+
+class EmployeeIterator implements Iterator {
+    private Employee[] employees;
+    private int position;
+
+    EmployeeIterator(Employee[] employees) {
+        this.employees = employees;
+        this.position = 0;
     }
-    public NonExistException(String msg)
-    {
-        super(msg);
+
+
+    public boolean hasNext() {
+        return position < employees.length && employees[position] != null;
+    }
+
+ 
+    public Employee next() {
+        if (this.hasNext()) {
+            return employees[position++];
+        }
+        return null;
     }
 }
+
 
 public class Main {
     public static void main(String args[]) {
         int cnt = 0;
         Employee emp[] = new Employee[10];
+        EmployeeFactory factory = new CreateEmployee(); 
 
         boolean flag = true;
         while (flag) {
@@ -295,7 +322,7 @@ public class Main {
             switch (num) {
                 case 1: {
                     System.out.println("------------");
-					System.out.println("1.CEO");
+                    System.out.println("1.CEO");
                     System.out.println("2.clerk");
                     System.out.println("3.Programmer");
                     System.out.println("4.Manager");
@@ -303,24 +330,24 @@ public class Main {
                     System.out.println("------------");
 
                     Integer val = Menu.readChoice(5);
-					
+
                     if (cnt < 10) {
-						try{
-                            if(EmployeeFactory.createEmployee(val) != null){
-                            emp[cnt] = EmployeeFactory.createEmployee(val);
+                        try {
+                            Employee newEmp = factory.createEmployee(val);
+                            emp[cnt] = newEmp;
                             cnt++;
-                            }
-						}
-						catch(RuntimeException e)
-						{
-							System.out.println("Error occur in creating the employee ");
-						}
+                        } catch (NonExistException e) {
+                            System.out.println(e.getMessage());
+                        }
                     }
                     break;
                 }
                 case 2: {
-                    for (int i = 0; i < cnt; i++) {
-                        emp[i].display();
+    
+                    Iterator employeeIterator = new EmployeeIterator(emp);
+                    while (employeeIterator.hasNext()) {
+                        Employee e = employeeIterator.next();
+                        e.display();
                     }
                     break;
                 }
