@@ -1,0 +1,24 @@
+create or replace procedure appraisal(
+id int,
+val decimal
+)
+language plpgsql
+as $$
+	begin
+		update  employee
+		set salary=salary+val
+		where eid = id;
+	end;
+$$
+
+select * from employee;
+
+DROP TABLE EMPLOYEE;
+
+create table employee(
+EID int primary key,
+NAME varchar(50) not null,
+AGE smallint check(AGE>=21 AND AGE<=60),
+DESIGNATION varchar(20) check(DESIGNATION IN ('CEO','PROGRAMMER','MANAGER','CLERK','OTHERS')),
+SALARY decimal(8,2)
+);
